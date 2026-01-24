@@ -2905,3 +2905,16 @@ d ~~x ~[x](https://x)~ x~~
 <p>c ~x ~~<a href="https://x">x</a>~~ x~</p>
 <p>d ~~x <sub><a href="https://x">x</a></sub> x~~</p>
 ````````````````````````````````
+
+U+0000 must be replaced with U+FFFD: https://spec.commonmark.org/0.31.2/#insecure-characters
+See https://github.com/pulldown-cmark/pulldown-cmark/issues/1065
+
+```````````````````````````````` example
+ 
+   
+hello world
+.
+<p>�
+���
+hello�world</p>
+````````````````````````````````

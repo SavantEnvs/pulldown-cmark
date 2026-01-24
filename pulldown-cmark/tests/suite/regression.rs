@@ -3457,3 +3457,17 @@ d ~~x ~[x](https://x)~ x~~
 
     test_markdown_html(original, expected, false, false, false, true, false, false, false, false, false);
 }
+
+#[test]
+fn regression_test_217() {
+    let original = r##" 
+   
+hello world
+"##;
+    let expected = r##"<p>�
+���
+hello�world</p>
+"##;
+
+    test_markdown_html(original, expected, false, false, false, false, false, false, false, false, false);
+}
