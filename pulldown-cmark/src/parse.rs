@@ -1334,6 +1334,11 @@ impl<'input> ParserInner<'input> {
                 i += 1;
                 mark = i;
             }
+            if c == b'\0' {
+                title.push_str(&text[mark..i]);
+                title.push('\u{fffd}');
+                mark = i + 1;
+            }
 
             i += 1;
         }
@@ -1398,6 +1403,12 @@ impl<'input> ParserInner<'input> {
                 buf.push('|');
                 ix += 2;
                 start_ix = ix;
+            } else if c == b'\0' {
+                let buf = buf.get_or_insert_with(|| String::with_capacity(spanned_bytes.len()));
+                buf.push_str(&spanned_text[start_ix..ix]);
+                buf.push('\u{fffd}');
+                ix += 1;
+                start_ix = ix;
             } else {
                 ix += 1;
             }
@@ -1444,6 +1455,12 @@ impl<'input> ParserInner<'input> {
                 buf.push_str(&spanned_text[start_ix..ix]);
                 buf.push('|');
                 ix += 2;
+                start_ix = ix;
+            } else if c == b'\0' {
+                let buf = buf.get_or_insert_with(|| String::with_capacity(spanned_bytes.len()));
+                buf.push_str(&spanned_text[start_ix..ix]);
+                buf.push('\u{fffd}');
+                ix += 1;
                 start_ix = ix;
             } else {
                 ix += 1;
