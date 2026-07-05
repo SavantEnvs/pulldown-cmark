@@ -9,7 +9,7 @@ use unicase::UniCase;
 use crate::{
     cjk::{
         classify_preceding_cjk_friendly_sequence, is_cjk_character,
-        is_non_emoji_general_variation_selector, is_preceding_cjk_friendly_punctuation,
+        is_preceding_cjk_friendly_punctuation,
     },
     linklabel::{scan_link_label_rest, LinkLabel},
     parse::{
@@ -2415,9 +2415,11 @@ fn delim_run_can_open(
         // Punctuation content without qualifying predecessor -- don't open
         return false;
     }
-    if ix == 0 {
-        return true;
-    }
+    let mut previous_chars = s[..ix].chars().rev();
+    let prev_char = match previous_chars.next() {
+        Some(ch) => ch,
+        None => return true,
+    };
     if mode == TableParseMode::Active {
         if s.as_bytes()[..ix].ends_with(b"|") && !s.as_bytes()[..ix].ends_with(br"\|") {
             return true;
@@ -2427,9 +2429,15 @@ fn delim_run_can_open(
         }
     }
     if options.contains(Options::ENABLE_CJK_FRIENDLY_EMPHASIS)
-        && is_cjk_friendly_delim(delim, run_len)
+        && is_cjk_friendly_delim(delim, run_len, options)
     {
-        return cjk_friendly_delim_run_can_open(s, ix, next_char, delim);
+        return cjk_friendly_delim_run_flanking(
+            prev_char,
+            || s[..(ix - prev_char.len_utf8())].chars().next_back(),
+            next_char,
+            delim,
+        )
+        .can_open;
     }
     // `*`, `~~`, and `^` can be intraword, `~` can only be interword if it's subscript, `_` cannot
     if delim == b'*' && !is_punctuation(next_char) {
@@ -2445,9 +2453,8 @@ fn delim_run_can_open(
     if delim == b'=' && run_len == 2 {
         return true;
     }
-    let prev_char = s[..ix].chars().last().unwrap();
     if delim == b'~'
-        && (prev_char == '~' || options.contains(Options::ENABLE_SUBSCRIPT))
+        && (run_len > 1 || options.contains(Options::ENABLE_SUBSCRIPT))
         && !is_punctuation(next_char)
     {
         return true;
@@ -2488,19 +2495,17 @@ fn delim_run_can_close(
             return true;
         }
     }
-    if next_char.is_whitespace() {
-        return true;
-    }
     let delim = suffix.bytes().next().unwrap();
     if options.contains(Options::ENABLE_CJK_FRIENDLY_EMPHASIS)
-        && is_cjk_friendly_delim(delim, run_len)
+        && is_cjk_friendly_delim(delim, run_len, options)
     {
-        return cjk_friendly_delim_run_can_close(
+        return cjk_friendly_delim_run_flanking(
             prev_char,
             || s[..(ix - prev_char.len_utf8())].chars().next_back(),
             next_char,
             delim,
-        );
+        )
+        .can_close;
     }
     // `*`, `~~`, and `^` can be intraword, `~` can only be interword if it's subscript, `_` cannot
     if (delim == b'*' || (delim == b'~' && run_len > 1) || (delim == b'=' && run_len == 2))
@@ -2511,63 +2516,18 @@ fn delim_run_can_close(
     if delim == b'^' && !is_punctuation(prev_char) {
         return true;
     }
-    if delim == b'~' && (prev_char == '~' || options.contains(Options::ENABLE_SUBSCRIPT)) {
+    if delim == b'~' && (run_len > 1 || options.contains(Options::ENABLE_SUBSCRIPT)) {
         return true;
     }
 
     next_char.is_whitespace() || is_punctuation(next_char)
 }
 
-fn is_cjk_friendly_delim(delim: u8, run_len: usize) -> bool {
-    matches!(delim, b'*' | b'_') || delim == b'~' && run_len > 1
-}
-
-fn cjk_friendly_delim_run_can_open(s: &str, ix: usize, next_char: char, delim: u8) -> bool {
-    let mut previous_chars = s[..ix].chars().rev();
-    let prev_char = match previous_chars.next() {
-        Some(ch) => ch,
-        None => return true,
-    };
-    if prev_char.is_whitespace() {
-        return true;
-    }
-
-    let flanking =
-        cjk_friendly_delim_run_flanking(prev_char, || previous_chars.next(), next_char, delim);
-    flanking.can_open
-}
-
-fn cjk_friendly_delim_run_can_close(
-    prev_char: char,
-    get_prev_prev_char: impl FnOnce() -> Option<char>,
-    next_char: char,
-    delim: u8,
-) -> bool {
-    if delim == b'~' {
-        return cjk_friendly_strikethrough_delim_run_can_close(
-            prev_char,
-            get_prev_prev_char,
-            next_char,
-        );
-    }
-
-    cjk_friendly_delim_run_flanking(prev_char, get_prev_prev_char, next_char, delim).can_close
-}
-
-fn cjk_friendly_strikethrough_delim_run_can_close(
-    prev_char: char,
-    get_prev_prev_char: impl FnOnce() -> Option<char>,
-    next_char: char,
-) -> bool {
-    if next_char.is_whitespace() || is_punctuation(next_char) {
-        return true;
-    }
-    if !is_punctuation(prev_char) && !is_non_emoji_general_variation_selector(prev_char) {
-        return true;
-    }
-
-    let prev_sequence = classify_preceding_cjk_friendly_sequence(prev_char, get_prev_prev_char);
-    !prev_sequence.is_punctuation || prev_sequence.is_cjk || is_cjk_character(next_char)
+fn is_cjk_friendly_delim(delim: u8, run_len: usize, options: Options) -> bool {
+    // two-tilde strikethrough, subscripts, superscript, and highlighter don't use flanking,
+    // so aren't affected by CJK-friendly mode
+    matches!(delim, b'*' | b'_')
+        || (delim == b'~' && run_len == 1 && !options.contains(Options::ENABLE_SUBSCRIPT))
 }
 
 struct CjkFriendlyDelimiterRunFlanking {
@@ -2581,7 +2541,7 @@ fn cjk_friendly_delim_run_flanking(
     next_char: char,
     delim: u8,
 ) -> CjkFriendlyDelimiterRunFlanking {
-    if delim == b'_' {
+    if delim == b'_' || delim == b'~' {
         return cjk_friendly_underscore_delim_run_flanking(
             prev_char,
             get_prev_prev_char,
@@ -2617,7 +2577,7 @@ fn cjk_friendly_delim_run_flanking(
     } else {
         open && (before_space_or_punctuation || !close)
     };
-    let can_close = if delim == b'*' {
+    let can_close = if cjk_changes_flanking {
         close
     } else {
         close && (after_space_or_punctuation || !open)

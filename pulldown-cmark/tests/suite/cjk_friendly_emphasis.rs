@@ -439,11 +439,29 @@ fn cjk_friendly_emphasis_test_10() {
 This~~is~~stricken
 
 Here I strike out an exclamation point~~!~~.
+
+真~（她~
+
+~真，~她
+
+真_（她_
+
+_真，_她
+
+This~isn't~stricken, this ~is~
+
+Here I don't strike out an exclamation point~!~.
 "##;
     let expected = r##"<p>真<del>（她</del></p>
 <p><del>真，</del>她</p>
 <p>This<del>is</del>stricken</p>
-<p>Here I strike out an exclamation point~~!~~.</p>
+<p>Here I strike out an exclamation point<del>!</del>.</p>
+<p>真~（她~</p>
+<p>~真，~她</p>
+<p>真_（她_</p>
+<p>_真，_她</p>
+<p>This~isn't~stricken, this <del>is</del></p>
+<p>Here I don't strike out an exclamation point~!~.</p>
 "##;
 
     test_markdown_html(original, expected, false, false, false, false, false, false, false, true);
