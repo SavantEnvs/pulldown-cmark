@@ -2550,12 +2550,10 @@ fn cjk_friendly_delim_run_flanking(
     }
 
     let prev_sequence = classify_preceding_cjk_friendly_sequence(prev_char, get_prev_prev_char);
-    let cjk_changes_flanking = matches!(delim, b'*' | b'~');
-    let before_cjk_or_ivs = cjk_changes_flanking
-        && (prev_sequence.is_cjk || prev_sequence.is_ideographic_variation_selector);
+    let before_cjk_or_ivs = prev_sequence.is_cjk || prev_sequence.is_ideographic_variation_selector;
     let before_space_or_punctuation = prev_char.is_whitespace() || prev_sequence.is_punctuation;
 
-    let after_cjk = cjk_changes_flanking && is_cjk_character(next_char);
+    let after_cjk = is_cjk_character(next_char);
     let after_punctuation = is_punctuation(next_char);
     let after_space_or_punctuation = next_char.is_whitespace() || after_punctuation;
 
@@ -2572,20 +2570,9 @@ fn cjk_friendly_delim_run_flanking(
             || after_cjk
             || matches!(prev_char, '*' | '_'));
 
-    let can_open = if cjk_changes_flanking {
-        open
-    } else {
-        open && (before_space_or_punctuation || !close)
-    };
-    let can_close = if cjk_changes_flanking {
-        close
-    } else {
-        close && (after_space_or_punctuation || !open)
-    };
-
     CjkFriendlyDelimiterRunFlanking {
-        can_open,
-        can_close,
+        can_open: open,
+        can_close: close,
     }
 }
 
