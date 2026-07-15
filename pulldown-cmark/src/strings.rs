@@ -98,6 +98,17 @@ pub enum CowStr<'a> {
     Inlined(InlineStr),
 }
 
+impl<'a> CowStr<'a> {
+    pub fn normalize_from(src: impl Into<CowStr<'a>>) -> CowStr<'a> {
+        let result = src.into();
+        if result.contains('\0') {
+            result.replace('\0', "\u{fffd}").into()
+        } else {
+            result
+        }
+    }
+}
+
 #[cfg(feature = "serde")]
 mod serde_impl {
     use core::fmt;

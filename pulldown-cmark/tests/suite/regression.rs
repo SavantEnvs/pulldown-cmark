@@ -3473,7 +3473,7 @@ hello�world</p>
 }
 
 #[test]
-fn regression_test_213() {
+fn regression_test_217() {
     let original = r##"`first second`
 `start `
 ` end`
@@ -3489,7 +3489,7 @@ fn regression_test_213() {
 }
 
 #[test]
-fn regression_test_214() {
+fn regression_test_218() {
     let original = r##"$$first second$$
 $$start $$
 $$ end$$
@@ -3505,7 +3505,7 @@ $$ $$
 }
 
 #[test]
-fn regression_test_215() {
+fn regression_test_219() {
     let original = r##"[x](x "first second")
 [x](x "start ")
 [x](x " end")
@@ -3521,7 +3521,7 @@ fn regression_test_215() {
 }
 
 #[test]
-fn regression_test_216() {
+fn regression_test_220() {
     let original = r##"[x](<first second>)
 [x](<start >)
 [x](< end>)
@@ -3537,7 +3537,7 @@ fn regression_test_216() {
 }
 
 #[test]
-fn regression_test_217() {
+fn regression_test_221() {
     let original = r##"[first second]: https://example.com/a
 [start ]: https://example.com/b
 [ end]: https://example.com/c
@@ -3558,7 +3558,7 @@ fn regression_test_217() {
 }
 
 #[test]
-fn regression_test_218() {
+fn regression_test_222() {
     let original = r##"[first�second]: https://example.com/a
 [start�]: https://example.com/b
 [�end]: https://example.com/c
@@ -3579,7 +3579,7 @@ fn regression_test_218() {
 }
 
 #[test]
-fn regression_test_219() {
+fn regression_test_223() {
     let original = r##"[first�second]: https://example.com/a
 [start�]: https://example.com/b
 [�end]: https://example.com/c
@@ -3594,6 +3594,68 @@ fn regression_test_219() {
 <a href="https://example.com/b">b</a>
 <a href="https://example.com/c">c</a>
 <a href="https://example.com/d">d</a></p>
+"##;
+
+    test_markdown_html(original, expected, false, false, false, false, false, false, false);
+}
+
+#[test]
+fn regression_test_224() {
+    let original = r##"First <span title=" ">Second</span>
+"##;
+    let expected = r##"<p>First <span title="�">Second</span></p>
+"##;
+
+    test_markdown_html(original, expected, false, false, false, false, false, false, false);
+}
+
+#[test]
+fn regression_test_225() {
+    let original = r##"<div title=" ">Second</div>
+"##;
+    let expected = r##"<div title="�">Second</div>
+"##;
+
+    test_markdown_html(original, expected, false, false, false, false, false, false, false);
+}
+
+#[test]
+fn regression_test_226() {
+    let original = r##"```
+ 
+```
+"##;
+    let expected = r##"<pre><code>�
+</code></pre>
+"##;
+
+    test_markdown_html(original, expected, false, false, false, false, false, false, false);
+}
+
+#[test]
+fn regression_test_227() {
+    let original = r##"# H1 {.f  #b }
+# H1 {f =b }
+# H1 {f }
+"##;
+    let expected = r##"<h1 id="b�" class="f�">H1</h1>
+<h1 f�="b�">H1</h1>
+<h1 f�="">H1</h1>
+"##;
+
+    test_markdown_html(original, expected, false, false, false, false, false, false, false);
+}
+
+#[test]
+fn regression_test_228() {
+    let original = r##"[a]: https://example.com/a " "
+
+[a][]
+
+[b](https://example.com/b " ")
+"##;
+    let expected = r##"<p><a href="https://example.com/a" title="�">a</a></p>
+<p><a href="https://example.com/b" title="�">b</a></p>
 "##;
 
     test_markdown_html(original, expected, false, false, false, false, false, false, false);

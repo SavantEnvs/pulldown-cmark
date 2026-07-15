@@ -3032,3 +3032,45 @@ Replace NUL with U+FFFD in link references
 <a href="https://example.com/c">c</a>
 <a href="https://example.com/d">d</a></p>
 ````````````````````````````````
+
+```````````````````````````````` example
+First <span title=" ">Second</span>
+.
+<p>First <span title="�">Second</span></p>
+````````````````````````````````
+
+```````````````````````````````` example
+<div title=" ">Second</div>
+.
+<div title="�">Second</div>
+````````````````````````````````
+
+```````````````````````````````` example
+```
+ 
+```
+.
+<pre><code>�
+</code></pre>
+````````````````````````````````
+
+```````````````````````````````` example
+# H1 {.f  #b }
+# H1 {f =b }
+# H1 {f }
+.
+<h1 id="b�" class="f�">H1</h1>
+<h1 f�="b�">H1</h1>
+<h1 f�="">H1</h1>
+````````````````````````````````
+
+```````````````````````````````` example
+[a]: https://example.com/a " "
+
+[a][]
+
+[b](https://example.com/b " ")
+.
+<p><a href="https://example.com/a" title="�">a</a></p>
+<p><a href="https://example.com/b" title="�">b</a></p>
+````````````````````````````````

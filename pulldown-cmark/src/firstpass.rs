@@ -1591,7 +1591,7 @@ impl<'a, 'b> FirstPass<'a, 'b> {
         ix + scan_blank_line(&bytes[ix..]).unwrap_or(0)
     }
 
-    fn append_code_text(&mut self, remaining_space: usize, start: usize, end: usize) {
+    fn append_code_text(&mut self, remaining_space: usize, mut start: usize, end: usize) {
         if remaining_space > 0 {
             let cow_ix = self.allocs.allocate_cow("   "[..remaining_space].into());
             self.tree.append(Item {
@@ -1599,6 +1599,15 @@ impl<'a, 'b> FirstPass<'a, 'b> {
                 end: start,
                 body: ItemBody::SynthesizeText(cow_ix),
             });
+        }
+        while let Some(ix) = self.text[start..end].find('\0') {
+            self.tree.append_text(start, start + ix, false);
+            self.tree.append(Item {
+                start: start + ix,
+                end: start + ix + 1,
+                body: ItemBody::SynthesizeChar('\u{fffd}'),
+            });
+            start += ix + 1;
         }
         if self.text.as_bytes()[end - 2] == b'\r' {
             // Normalize CRLF to LF
@@ -2831,15 +2840,18 @@ fn parse_inside_attribute_block(inside_attr_block: &str) -> Option<HeadingAttrib
         if attr.len() > 1 {
             let first_byte = attr.as_bytes()[0];
             if first_byte == b'#' {
-                id = Some(attr[1..].into());
+                id = Some(CowStr::normalize_from(&attr[1..]));
             } else if first_byte == b'.' {
-                classes.push(attr[1..].into());
+                classes.push(CowStr::normalize_from(&attr[1..]));
             } else {
                 let split = attr.split_once('=');
                 if let Some((key, value)) = split {
-                    attrs.push((key.into(), Some(value.into())));
+                    attrs.push((
+                        CowStr::normalize_from(key),
+                        Some(CowStr::normalize_from(value)),
+                    ));
                 } else {
-                    attrs.push((attr.into(), None));
+                    attrs.push((CowStr::normalize_from(attr), None));
                 }
             }
         }
