@@ -1,0 +1,5 @@
+project: savantenvs/pulldown-cmark
+target: parse
+
+cmds:
+  - cmd: /mayhem/parse
