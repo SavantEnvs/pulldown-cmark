@@ -143,3 +143,8 @@ fn test_bad_slice_unicode() {
 fn test_simd_wrapping_shr_issue_651() {
     parse("`````````````````````````````````x`");
 }
+
+#[test]
+fn issue_1112() {
+    parse("<!S\r:");
+}
