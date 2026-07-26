@@ -2840,18 +2840,18 @@ fn parse_inside_attribute_block(inside_attr_block: &str) -> Option<HeadingAttrib
         if attr.len() > 1 {
             let first_byte = attr.as_bytes()[0];
             if first_byte == b'#' {
-                id = Some(CowStr::normalize_from(&attr[1..]));
+                id = Some(CowStr::from_replace_nuls(&attr[1..]));
             } else if first_byte == b'.' {
-                classes.push(CowStr::normalize_from(&attr[1..]));
+                classes.push(CowStr::from_replace_nuls(&attr[1..]));
             } else {
                 let split = attr.split_once('=');
                 if let Some((key, value)) = split {
                     attrs.push((
-                        CowStr::normalize_from(key),
-                        Some(CowStr::normalize_from(value)),
+                        CowStr::from_replace_nuls(key),
+                        Some(CowStr::from_replace_nuls(value)),
                     ));
                 } else {
-                    attrs.push((CowStr::normalize_from(attr), None));
+                    attrs.push((CowStr::from_replace_nuls(attr), None));
                 }
             }
         }

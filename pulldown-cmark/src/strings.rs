@@ -99,7 +99,7 @@ pub enum CowStr<'a> {
 }
 
 impl<'a> CowStr<'a> {
-    pub fn normalize_from(src: impl Into<CowStr<'a>>) -> CowStr<'a> {
+    pub fn from_replace_nuls(src: impl Into<CowStr<'a>>) -> CowStr<'a> {
         let result = src.into();
         if result.contains('\0') {
             result.replace('\0', "\u{fffd}").into()
