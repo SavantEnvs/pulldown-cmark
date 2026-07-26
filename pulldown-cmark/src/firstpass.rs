@@ -1467,8 +1467,7 @@ impl<'a, 'b> FirstPass<'a, 'b> {
         loop {
             let line_start_ix = ix;
             ix += scan_nextline(&bytes[ix..]);
-            self.append_code_text(remaining_space, line_start_ix, ix);
-            // TODO(spec clarification): should we synthesize newline at EOF?
+            self.append_code_line(remaining_space, line_start_ix, ix);
 
             if !self.last_line_blank {
                 last_nonblank_child = self.tree.cur();
@@ -1546,7 +1545,7 @@ impl<'a, 'b> FirstPass<'a, 'b> {
             let remaining_space = line_start.remaining_space();
             ix += line_start.bytes_scanned();
             let next_ix = ix + scan_nextline(&bytes[ix..]);
-            self.append_code_text(remaining_space, ix, next_ix);
+            self.append_code_line(remaining_space, ix, next_ix);
             ix = next_ix;
         }
     }
@@ -1581,7 +1580,7 @@ impl<'a, 'b> FirstPass<'a, 'b> {
             let remaining_space = line_start.remaining_space();
             ix += line_start.bytes_scanned();
             let next_ix = ix + scan_nextline(&bytes[ix..]);
-            self.append_code_text(remaining_space, ix, next_ix);
+            self.append_code_line(remaining_space, ix, next_ix);
             ix = next_ix;
         }
 
@@ -1591,7 +1590,7 @@ impl<'a, 'b> FirstPass<'a, 'b> {
         ix + scan_blank_line(&bytes[ix..]).unwrap_or(0)
     }
 
-    fn append_code_text(&mut self, remaining_space: usize, mut start: usize, end: usize) {
+    fn append_code_line(&mut self, remaining_space: usize, mut start: usize, end: usize) {
         if remaining_space > 0 {
             let cow_ix = self.allocs.allocate_cow("   "[..remaining_space].into());
             self.tree.append(Item {
@@ -1609,12 +1608,22 @@ impl<'a, 'b> FirstPass<'a, 'b> {
             });
             start += ix + 1;
         }
-        if self.text.as_bytes()[end - 2] == b'\r' {
-            // Normalize CRLF to LF
-            self.tree.append_text(start, end - 2, false);
-            self.tree.append_text(end - 1, end, false);
-        } else {
-            self.tree.append_text(start, end, false);
+
+        // Normalize EOL/EOF to LF
+        let (trim, synthesize_lf) = match LineEnding::at_end(&self.text.as_bytes()[start..end]) {
+            Some(LineEnding::LF) => (0, false),
+            Some(eol) => (eol.len(), true),
+            None => (0, true),
+        };
+
+        self.tree.append_text(start, end - trim, false);
+
+        if synthesize_lf {
+            self.tree.append(Item {
+                start: end - trim,
+                end,
+                body: ItemBody::SynthesizeChar('\n'),
+            });
         }
     }
 
@@ -1628,23 +1637,25 @@ impl<'a, 'b> FirstPass<'a, 'b> {
                 body: ItemBody::SynthesizeText(cow_ix),
             });
         }
-        if self.text.as_bytes()[end - 2] == b'\r' {
-            // Normalize CRLF to LF
+
+        // Normalize EOL/EOF to LF
+        let (trim, synthesize_lf) = match LineEnding::at_end(&self.text.as_bytes()[start..end]) {
+            Some(LineEnding::LF) => (0, false),
+            Some(eol) => (eol.len(), true),
+            None => (0, true),
+        };
+
+        self.tree.append(Item {
+            start,
+            end: end - trim,
+            body: ItemBody::Html,
+        });
+
+        if synthesize_lf {
             self.tree.append(Item {
-                start,
-                end: end - 2,
-                body: ItemBody::Html,
-            });
-            self.tree.append(Item {
-                start: end - 1,
+                start: end - trim,
                 end,
-                body: ItemBody::Html,
-            });
-        } else {
-            self.tree.append(Item {
-                start,
-                end,
-                body: ItemBody::Html,
+                body: ItemBody::SynthesizeChar('\n'),
             });
         }
     }
