@@ -77,7 +77,7 @@ fn super_sub_test_7() {
 fn super_sub_test_8() {
     let original = r##"~~This ~is~~ stricken.~
 "##;
-    let expected = r##"<p>~~This <sub>is~~ stricken.</sub></p>
+    let expected = r##"<p>~~This ~is~~ stricken.~</p>
 "##;
 
     test_markdown_html(original, expected, false, false, false, true, false, false, false, false);

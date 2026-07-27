@@ -49,7 +49,7 @@ Backslash escapes:
 ```````````````````````````````` example_super_sub
 ~~This ~is~~ stricken.~
 .
-<p>~~This <sub>is~~ stricken.</sub></p>
+<p>~~This ~is~~ stricken.~</p>
 ````````````````````````````````
 
 The first one wins.

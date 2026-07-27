@@ -2890,3 +2890,18 @@ starts at or after the closing delimiter.
 .
 <p><img src="" alt="[] " />]]</p>
 ````````````````````````````````
+
+```````````````````````````````` example_super_sub
+a ~[x](https://x)~
+
+b ~~[x](https://x)~~
+
+c ~x ~~[x](https://x)~~ x~
+
+d ~~x ~[x](https://x)~ x~~
+.
+<p>a <sub><a href="https://x">x</a></sub></p>
+<p>b ~~<a href="https://x">x</a>~~</p>
+<p>c ~x ~~<a href="https://x">x</a>~~ x~</p>
+<p>d ~~x <sub><a href="https://x">x</a></sub> x~~</p>
+````````````````````````````````
