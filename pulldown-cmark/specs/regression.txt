@@ -3074,3 +3074,11 @@ First <span title=" ">Second</span>
 <p><a href="https://example.com/a" title="�">a</a></p>
 <p><a href="https://example.com/b" title="�">b</a></p>
 ````````````````````````````````
+
+```````````````````````````````` example_wikilinks
+[[Z ]]
+[[Z |Z ]]
+.
+<p><a href="Z%EF%BF%BD">Z�</a>
+<a href="Z%EF%BF%BD">Z�</a></p>
+````````````````````````````````

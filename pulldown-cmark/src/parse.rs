@@ -1000,6 +1000,12 @@ impl<'input> ParserInner<'input> {
                             backslash_escaped: false,
                         },
                     });
+                    if wikitext.contains('\0') {
+                        self.tree[body_node].item.body = ItemBody::SynthesizeText(
+                            self.allocs
+                                .allocate_cow(CowStr::from_replace_nuls(wikitext)),
+                        );
+                    }
                     Some((false, body_node, wikitext))
                 }
             };
