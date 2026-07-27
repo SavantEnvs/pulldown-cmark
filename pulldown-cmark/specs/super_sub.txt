@@ -28,16 +28,28 @@ Backslash escapes:
 <p><sub>This</sub>is<sub>nothing</sub></p>
 ````````````````````````````````
 
-```````````````````````````````` example_super_sub
+```````````````````````````````` example_super_sub_strikethrough
 ~This ~~is not stricken.~
 .
 <p><sub>This ~~is not stricken.</sub></p>
 ````````````````````````````````
 
 ```````````````````````````````` example_super_sub
+~This ~~is not stricken.~
+.
+<p><sub>This ~~is not stricken.</sub></p>
+````````````````````````````````
+
+```````````````````````````````` example_super_sub_strikethrough
 ~~This ~is~~ stricken.~
 .
 <p><del>This ~is</del> stricken.~</p>
+````````````````````````````````
+
+```````````````````````````````` example_super_sub
+~~This ~is~~ stricken.~
+.
+<p>~~This <sub>is~~ stricken.</sub></p>
 ````````````````````````````````
 
 The first one wins.
