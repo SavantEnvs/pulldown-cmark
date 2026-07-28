@@ -17,13 +17,16 @@ pub fn test_markdown_html(
     deflists: bool,
     container_extensions: bool,
     cjk_friendly_emphasis: bool,
+    strikethrough: bool,
 ) {
     let mut s = String::new();
 
     let mut opts = Options::empty();
     opts.insert(Options::ENABLE_MATH);
     opts.insert(Options::ENABLE_TABLES);
-    opts.insert(Options::ENABLE_STRIKETHROUGH);
+    if strikethrough {
+        opts.insert(Options::ENABLE_STRIKETHROUGH);
+    }
     opts.insert(Options::ENABLE_HIGHLIGHT);
     opts.insert(Options::ENABLE_SUPERSCRIPT);
     if wikilinks {

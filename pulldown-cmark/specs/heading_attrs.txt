@@ -234,7 +234,7 @@ Attribute blocks should be at the end of the heading.
 
 Inlines can be used in headings.
 
-```````````````````````````````` example
+```````````````````````````````` example_strikethrough
 # *H1* { #id1 }
 ## **H2** {#id2}
 ### _H3_ {#id3}
