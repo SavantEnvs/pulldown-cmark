@@ -1044,14 +1044,10 @@ impl<'input> ParserInner<'input> {
                     let c = self.text.as_bytes()[self.tree[cur_ix].item.start];
                     let both = can_open && can_close;
                     if can_close {
-                        while let Some(el) =
+                        'outer: while let Some(el) =
                             self.inline_stack
                                 .find_match(&mut self.tree, c, run_length, both)
                         {
-                            // have a match!
-                            if let Some(prev_ix) = prev {
-                                self.tree[prev_ix].next = None;
-                            }
                             let match_count = min(count, el.count);
                             // start, end are tree node indices
                             let mut end = cur_ix - 1;
@@ -1067,56 +1063,59 @@ impl<'input> ParserInner<'input> {
                                 let ty = if c == b'~' {
                                     if inc == 2 {
                                         if self.options.contains(Options::ENABLE_STRIKETHROUGH) {
-                                            ItemBody::Strikethrough
+                                            Some(ItemBody::Strikethrough)
                                         } else {
-                                            ItemBody::Text {
-                                                backslash_escaped: false,
-                                            }
+                                            None
                                         }
                                     } else {
                                         if self.options.contains(Options::ENABLE_SUBSCRIPT) {
-                                            ItemBody::Subscript
+                                            Some(ItemBody::Subscript)
                                         } else if self
                                             .options
                                             .contains(Options::ENABLE_STRIKETHROUGH)
                                         {
-                                            ItemBody::Strikethrough
+                                            Some(ItemBody::Strikethrough)
                                         } else {
-                                            ItemBody::Text {
-                                                backslash_escaped: false,
-                                            }
+                                            None
                                         }
                                     }
                                 } else if c == b'^' {
                                     if self.options.contains(Options::ENABLE_SUPERSCRIPT) {
-                                        ItemBody::Superscript
+                                        Some(ItemBody::Superscript)
                                     } else {
-                                        ItemBody::Text {
-                                            backslash_escaped: false,
-                                        }
+                                        None
                                     }
                                 } else if c == b'=' {
                                     if inc == 2 && self.options.contains(Options::ENABLE_HIGHLIGHT)
                                     {
-                                        ItemBody::Highlight
+                                        Some(ItemBody::Highlight)
                                     } else {
-                                        ItemBody::Text {
-                                            backslash_escaped: false,
-                                        }
+                                        None
                                     }
                                 } else if inc == 2 {
-                                    ItemBody::Strong
+                                    Some(ItemBody::Strong)
                                 } else {
-                                    ItemBody::Emphasis
+                                    Some(ItemBody::Emphasis)
                                 };
 
-                                let root = start - inc;
-                                end = end + inc;
-                                self.tree[root].item.body = ty;
-                                self.tree[root].item.end = self.tree[end].item.end;
-                                self.tree[root].child = Some(start);
-                                self.tree[root].next = None;
-                                start = root;
+                                if let Some(ty) = ty {
+                                    // have a match!
+                                    let root = start - inc;
+                                    end = end + inc;
+                                    self.tree[root].item.body = ty;
+                                    self.tree[root].item.end = self.tree[end].item.end;
+                                    self.tree[root].child = Some(start);
+                                    self.tree[root].next = None;
+                                    start = root;
+                                    if let Some(prev_ix) = prev {
+                                        self.tree[prev_ix].next = None;
+                                    }
+                                } else {
+                                    self.tree[el.start].item.body = ItemBody::Text {
+                                        backslash_escaped: false,
+                                    };
+                                    continue 'outer;
+                                }
                             }
 
                             // set next for top most emph level

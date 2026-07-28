@@ -427,7 +427,7 @@ ISSUE #336
 
 EMPHASIS ACROSS PARAGRAPHS
 
-```````````````````````````````` example
+```````````````````````````````` example_strikethrough
 ~~*_**__
 
 __a__
@@ -897,13 +897,13 @@ ISSUE 642
 
 ISSUE 532
 
-```````````````````````````````` example
+```````````````````````````````` example_strikethrough
 ~~foo~~bar
 .
 <p><del>foo</del>bar</p>
 ````````````````````````````````
 
-```````````````````````````````` example
+```````````````````````````````` example_strikethrough
 foo~~bar~~
 .
 <p>foo<del>bar</del></p>
@@ -911,49 +911,49 @@ foo~~bar~~
 
 ISSUE 551
 
-```````````````````````````````` example
+```````````````````````````````` example_strikethrough
 *~~__emphasis strike strong__~~* ~~*__strike emphasis strong__*~~
 .
 <p><em><del><strong>emphasis strike strong</strong></del></em> <del><em><strong>strike emphasis strong</strong></em></del></p>
 ````````````````````````````````
 
-```````````````````````````````` example
+```````````````````````````````` example_strikethrough
 *~~__emphasis strike strong__~~* ~~*__`strike emphasis strong code`__*~~
 .
 <p><em><del><strong>emphasis strike strong</strong></del></em> <del><em><strong><code>strike emphasis strong code</code></strong></em></del></p>
 ````````````````````````````````
 
-```````````````````````````````` example
+```````````````````````````````` example_strikethrough
 *~~`emphasis strike code`~~* ~~*__strike emphasis strong__*~~
 .
 <p><em><del><code>emphasis strike code</code></del></em> <del><em><strong>strike emphasis strong</strong></em></del></p>
 ````````````````````````````````
 
-```````````````````````````````` example
+```````````````````````````````` example_strikethrough
 *~~`emphasis strike code`~~* ~~*__`strike emphasis strong code`__*~~
 .
 <p><em><del><code>emphasis strike code</code></del></em> <del><em><strong><code>strike emphasis strong code</code></strong></em></del></p>
 ````````````````````````````````
 
-```````````````````````````````` example
+```````````````````````````````` example_strikethrough
 **~~_strong strike emphasis_~~** ~~*__strike emphasis strong__*~~
 .
 <p><strong><del><em>strong strike emphasis</em></del></strong> <del><em><strong>strike emphasis strong</strong></em></del></p>
 ````````````````````````````````
 
-```````````````````````````````` example
+```````````````````````````````` example_strikethrough
 **~~_strong strike emphasis_~~** ~~*__`strike emphasis strong code`__*~~
 .
 <p><strong><del><em>strong strike emphasis</em></del></strong> <del><em><strong><code>strike emphasis strong code</code></strong></em></del></p>
 ````````````````````````````````
 
-```````````````````````````````` example
+```````````````````````````````` example_strikethrough
 **~~`strong strike code`~~** ~~*__strike emphasis strong__*~~
 .
 <p><strong><del><code>strong strike code</code></del></strong> <del><em><strong>strike emphasis strong</strong></em></del></p>
 ````````````````````````````````
 
-```````````````````````````````` example
+```````````````````````````````` example_strikethrough
 **~~`strong strike code`~~** ~~*__`strike emphasis strong code`__*~~
 .
 <p><strong><del><code>strong strike code</code></del></strong> <del><em><strong><code>strike emphasis strong code</code></strong></em></del></p>
@@ -2528,7 +2528,7 @@ junk</p>
 
 ISSUE 861
 
-```````````````````````````````` example
+```````````````````````````````` example_strikethrough
  ~~~
     ~~~
 .
@@ -2536,7 +2536,7 @@ ISSUE 861
 </code></pre>
 ````````````````````````````````
 
-```````````````````````````````` example
+```````````````````````````````` example_strikethrough
  ~~~
    ~~~
 .
@@ -2889,4 +2889,19 @@ starts at or after the closing delimiter.
 ![[] ]()]]
 .
 <p><img src="" alt="[] " />]]</p>
+````````````````````````````````
+
+```````````````````````````````` example_super_sub
+a ~[x](https://x)~
+
+b ~~[x](https://x)~~
+
+c ~x ~~[x](https://x)~~ x~
+
+d ~~x ~[x](https://x)~ x~~
+.
+<p>a <sub><a href="https://x">x</a></sub></p>
+<p>b ~~<a href="https://x">x</a>~~</p>
+<p>c ~x ~~<a href="https://x">x</a>~~ x~</p>
+<p>d ~~x <sub><a href="https://x">x</a></sub> x~~</p>
 ````````````````````````````````

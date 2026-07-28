@@ -153,13 +153,13 @@ b</mark></p>
 
 # Combined with strikethrough
 
-```````````````````````````````` example
+```````````````````````````````` example_strikethrough
 ==~~both~~==
 .
 <p><mark><del>both</del></mark></p>
 ````````````````````````````````
 
-```````````````````````````````` example
+```````````````````````````````` example_strikethrough
 ~~==both==~~
 .
 <p><del><mark>both</mark></del></p>
