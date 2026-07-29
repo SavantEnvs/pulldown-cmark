@@ -26,7 +26,7 @@ fn cjk_friendly_emphasis_test_2() {
 <p><strong>이 별표는 강조 표시로 인식되지 않고 그대로 표시됩니다(이 괄호 때문에)</strong>이 문장 때문에.</p>
 "##;
 
-    test_markdown_html(original, expected, false, false, false, false, false, false, false, true, true);
+    test_markdown_html(original, expected, false, false, false, false, false, false, false, true, false);
 }
 
 #[test]
@@ -288,7 +288,7 @@ Git**（注：不是GitHub）**
 <p><strong>“︁Git”︁</strong>Hub</p>
 "##;
 
-    test_markdown_html(original, expected, false, false, false, false, false, false, false, true, true);
+    test_markdown_html(original, expected, false, false, false, false, false, false, false, true, false);
 }
 
 #[test]
@@ -313,7 +313,7 @@ fn cjk_friendly_emphasis_test_4() {
 <p><strong>(k)</strong>ᄏ</p>
 "##;
 
-    test_markdown_html(original, expected, false, false, false, false, false, false, false, true, true);
+    test_markdown_html(original, expected, false, false, false, false, false, false, false, true, false);
 }
 
 #[test]
@@ -338,7 +338,7 @@ a**㊙**a
 <p>a<strong>㊙</strong>a</p>
 "##;
 
-    test_markdown_html(original, expected, false, false, false, false, false, false, false, true, true);
+    test_markdown_html(original, expected, false, false, false, false, false, false, false, true, false);
 }
 
 #[test]
@@ -370,7 +370,7 @@ a**a𐬻**a
 <p>a**a𐬻**a</p>
 "##;
 
-    test_markdown_html(original, expected, false, false, false, false, false, false, false, true, true);
+    test_markdown_html(original, expected, false, false, false, false, false, false, false, true, false);
 }
 
 #[test]
@@ -398,7 +398,7 @@ fn cjk_friendly_emphasis_test_7() {
 <p>“︁Git”︁<strong>Hub</strong></p>
 "##;
 
-    test_markdown_html(original, expected, false, false, false, false, false, false, false, true, true);
+    test_markdown_html(original, expected, false, false, false, false, false, false, false, true, false);
 }
 
 #[test]
@@ -414,7 +414,7 @@ _foo_bar_baz_
 <p><em>foo_bar_baz</em></p>
 "##;
 
-    test_markdown_html(original, expected, false, false, false, false, false, false, false, true, true);
+    test_markdown_html(original, expected, false, false, false, false, false, false, false, true, false);
 }
 
 #[test]
@@ -427,7 +427,7 @@ _abc_漢
 <p>_abc_漢</p>
 "##;
 
-    test_markdown_html(original, expected, false, false, false, false, false, false, false, true, true);
+    test_markdown_html(original, expected, false, false, false, false, false, false, false, true, false);
 }
 
 #[test]

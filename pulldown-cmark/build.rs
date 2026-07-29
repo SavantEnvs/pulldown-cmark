@@ -194,6 +194,8 @@ impl<'a> Iterator for Spec<'a> {
             let deflists_suffix = "_deflists\n";
             let container_extensions_suffix = "_container_extensions\n";
             let cjk_friendly_emphasis_suffix = "_cjk_friendly_emphasis\n";
+            let cjk_friendly_emphasis_strikethrough_suffix =
+                "_cjk_friendly_emphasis_strikethrough\n";
             let strikethrough_suffix = "_strikethrough\n";
             if spec[(pos + prefix.len())..].starts_with(smartpunct_suffix) {
                 Some((
@@ -302,6 +304,21 @@ impl<'a> Iterator for Spec<'a> {
             } else if spec[(pos + prefix.len())..].starts_with(cjk_friendly_emphasis_suffix) {
                 Some((
                     pos + prefix.len() + cjk_friendly_emphasis_suffix.len(),
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true,
+                    false,
+                ))
+            } else if spec[(pos + prefix.len())..]
+                .starts_with(cjk_friendly_emphasis_strikethrough_suffix)
+            {
+                Some((
+                    pos + prefix.len() + cjk_friendly_emphasis_strikethrough_suffix.len(),
                     false,
                     false,
                     false,
