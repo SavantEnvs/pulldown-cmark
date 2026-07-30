@@ -86,7 +86,7 @@ fn {}_test_{i}() {{
     let original = r##"{original}"##;
     let expected = r##"{expected}"##;
 
-    test_markdown_html(original, expected, {smart_punct}, {metadata_blocks}, {old_footnotes}, {subscript}, {wikilinks}, {deflists}, {container_extensions}, {strikethrough});
+    test_markdown_html(original, expected, {smart_punct}, {metadata_blocks}, {old_footnotes}, {subscript}, {wikilinks}, {deflists}, {container_extensions}, {cjk_friendly_emphasis}, {strikethrough});
 }}
 "###,
                     spec_name,
@@ -100,6 +100,7 @@ fn {}_test_{i}() {{
                     wikilinks = testcase.wikilinks,
                     deflists = testcase.deflists,
                     container_extensions = testcase.container_extensions,
+                    cjk_friendly_emphasis = testcase.cjk_friendly_emphasis,
                     strikethrough = testcase.strikethrough,
                 ))
                 .unwrap();
@@ -160,6 +161,7 @@ pub struct TestCase {
     pub wikilinks: bool,
     pub deflists: bool,
     pub container_extensions: bool,
+    pub cjk_friendly_emphasis: bool,
     pub strikethrough: bool,
 }
 
@@ -180,6 +182,7 @@ impl<'a> Iterator for Spec<'a> {
             wikilinks,
             deflists,
             container_extensions,
+            cjk_friendly_emphasis,
             strikethrough,
         ) = self.spec.find(prefix).and_then(|pos| {
             let smartpunct_suffix = "_smartpunct\n";
@@ -190,11 +193,15 @@ impl<'a> Iterator for Spec<'a> {
             let wikilinks_suffix = "_wikilinks\n";
             let deflists_suffix = "_deflists\n";
             let container_extensions_suffix = "_container_extensions\n";
+            let cjk_friendly_emphasis_suffix = "_cjk_friendly_emphasis\n";
+            let cjk_friendly_emphasis_strikethrough_suffix =
+                "_cjk_friendly_emphasis_strikethrough\n";
             let strikethrough_suffix = "_strikethrough\n";
             if spec[(pos + prefix.len())..].starts_with(smartpunct_suffix) {
                 Some((
                     pos + prefix.len() + smartpunct_suffix.len(),
                     true,
+                    false,
                     false,
                     false,
                     false,
@@ -214,6 +221,7 @@ impl<'a> Iterator for Spec<'a> {
                     false,
                     false,
                     false,
+                    false,
                 ))
             } else if spec[(pos + prefix.len())..].starts_with(old_footnotes_suffix) {
                 Some((
@@ -221,6 +229,7 @@ impl<'a> Iterator for Spec<'a> {
                     false,
                     false,
                     true,
+                    false,
                     false,
                     false,
                     false,
@@ -238,6 +247,7 @@ impl<'a> Iterator for Spec<'a> {
                     false,
                     false,
                     false,
+                    false,
                 ))
             } else if spec[(pos + prefix.len())..].starts_with(super_sub_strikethrough_suffix) {
                 Some((
@@ -246,6 +256,7 @@ impl<'a> Iterator for Spec<'a> {
                     false,
                     false,
                     true,
+                    false,
                     false,
                     false,
                     false,
@@ -262,6 +273,7 @@ impl<'a> Iterator for Spec<'a> {
                     false,
                     false,
                     false,
+                    false,
                 ))
             } else if spec[(pos + prefix.len())..].starts_with(deflists_suffix) {
                 Some((
@@ -272,6 +284,7 @@ impl<'a> Iterator for Spec<'a> {
                     false,
                     false,
                     true,
+                    false,
                     false,
                     false,
                 ))
@@ -286,10 +299,40 @@ impl<'a> Iterator for Spec<'a> {
                     false,
                     true,
                     false,
+                    false,
+                ))
+            } else if spec[(pos + prefix.len())..].starts_with(cjk_friendly_emphasis_suffix) {
+                Some((
+                    pos + prefix.len() + cjk_friendly_emphasis_suffix.len(),
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true,
+                    false,
+                ))
+            } else if spec[(pos + prefix.len())..]
+                .starts_with(cjk_friendly_emphasis_strikethrough_suffix)
+            {
+                Some((
+                    pos + prefix.len() + cjk_friendly_emphasis_strikethrough_suffix.len(),
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                    true,
+                    true,
                 ))
             } else if spec[(pos + prefix.len())..].starts_with(strikethrough_suffix) {
                 Some((
                     pos + prefix.len() + strikethrough_suffix.len(),
+                    false,
                     false,
                     false,
                     false,
@@ -302,6 +345,7 @@ impl<'a> Iterator for Spec<'a> {
             } else if spec[(pos + prefix.len())..].starts_with('\n') {
                 Some((
                     pos + prefix.len() + 1,
+                    false,
                     false,
                     false,
                     false,
@@ -336,6 +380,7 @@ impl<'a> Iterator for Spec<'a> {
             wikilinks,
             deflists,
             container_extensions,
+            cjk_friendly_emphasis,
             strikethrough,
         };
 
