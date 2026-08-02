@@ -1323,6 +1323,19 @@ impl<'a, 'b> FirstPass<'a, 'b> {
 
                     LoopInstruction::ContinueAndSkip(0)
                 }
+                b'\0' => {
+                    // U+0000 must be replaced with U+FFFD
+                    // https://spec.commonmark.org/0.31.2/#insecure-characters
+                    self.tree.append_text(begin_text, ix, backslash_escaped);
+                    backslash_escaped = false;
+                    self.tree.append(Item {
+                        start: ix,
+                        end: ix + 1,
+                        body: ItemBody::SynthesizeChar('\u{fffd}'),
+                    });
+                    begin_text = ix + 1;
+                    LoopInstruction::ContinueAndSkip(0)
+                }
                 _ => LoopInstruction::ContinueAndSkip(0),
             }
         });
@@ -1578,7 +1591,7 @@ impl<'a, 'b> FirstPass<'a, 'b> {
         ix + scan_blank_line(&bytes[ix..]).unwrap_or(0)
     }
 
-    fn append_code_text(&mut self, remaining_space: usize, start: usize, end: usize) {
+    fn append_code_text(&mut self, remaining_space: usize, mut start: usize, end: usize) {
         if remaining_space > 0 {
             let cow_ix = self.allocs.allocate_cow("   "[..remaining_space].into());
             self.tree.append(Item {
@@ -1586,6 +1599,15 @@ impl<'a, 'b> FirstPass<'a, 'b> {
                 end: start,
                 body: ItemBody::SynthesizeText(cow_ix),
             });
+        }
+        while let Some(ix) = self.text[start..end].find('\0') {
+            self.tree.append_text(start, start + ix, false);
+            self.tree.append(Item {
+                start: start + ix,
+                end: start + ix + 1,
+                body: ItemBody::SynthesizeChar('\u{fffd}'),
+            });
+            start += ix + 1;
         }
         if self.text.as_bytes()[end - 2] == b'\r' {
             // Normalize CRLF to LF
@@ -2615,7 +2637,7 @@ fn create_lut(options: &Options) -> LookupTable {
 fn special_bytes(options: &Options) -> [bool; 256] {
     let mut bytes = [false; 256];
     let standard_bytes = [
-        b'\n', b'\r', b'*', b'_', b'&', b'\\', b'[', b']', b'<', b'!', b'`',
+        b'\n', b'\r', b'*', b'_', b'&', b'\\', b'[', b']', b'<', b'!', b'`', b'\0',
     ];
 
     for &byte in &standard_bytes {
@@ -2669,7 +2691,7 @@ type LookupTable = [bool; 256];
 /// calls the callback function on all bytes (and their indices) that are in the
 /// special-bytes set defined by [`special_bytes`]/[`simd::compute_lookup`].
 /// The always-included bytes are
-/// `` ` ``, `\`, `&`, `*`, `_`, `!`, `<`, `[`, `]`, `\r`, `\n`; additional bytes
+/// `` ` ``, `\`, `&`, `*`, `_`, `!`, `<`, `[`, `]`, `\r`, `\n`, `\0`; additional bytes
 /// are added when their corresponding option is enabled (e.g. `|` with tables,
 /// `~` with strikethrough/subscript, `^` with superscript, `=` with highlight,
 /// `$`/`{`/`}` with math, and `.`/`-`/`"`/`'` with smart punctuation).
@@ -2818,15 +2840,18 @@ fn parse_inside_attribute_block(inside_attr_block: &str) -> Option<HeadingAttrib
         if attr.len() > 1 {
             let first_byte = attr.as_bytes()[0];
             if first_byte == b'#' {
-                id = Some(attr[1..].into());
+                id = Some(CowStr::from_replace_nuls(&attr[1..]));
             } else if first_byte == b'.' {
-                classes.push(attr[1..].into());
+                classes.push(CowStr::from_replace_nuls(&attr[1..]));
             } else {
                 let split = attr.split_once('=');
                 if let Some((key, value)) = split {
-                    attrs.push((key.into(), Some(value.into())));
+                    attrs.push((
+                        CowStr::from_replace_nuls(key),
+                        Some(CowStr::from_replace_nuls(value)),
+                    ));
                 } else {
-                    attrs.push((attr.into(), None));
+                    attrs.push((CowStr::from_replace_nuls(attr), None));
                 }
             }
         }
@@ -2869,7 +2894,7 @@ mod simd {
     pub(super) fn compute_lookup(options: &Options) -> [u8; 16] {
         let mut lookup = [0u8; 16];
         let standard_bytes = [
-            b'\n', b'\r', b'*', b'_', b'&', b'\\', b'[', b']', b'<', b'!', b'`',
+            b'\n', b'\r', b'*', b'_', b'&', b'\\', b'[', b']', b'<', b'!', b'`', b'\0',
         ];
 
         for &byte in &standard_bytes {
@@ -3090,7 +3115,7 @@ mod simd {
         fn exhaustive_search() {
             let chars = [
                 b'\n', b'\r', b'*', b'_', b'~', b'^', b'|', b'&', b'\\', b'[', b']', b'<', b'!',
-                b'`', b'$', b'{', b'}',
+                b'`', b'$', b'{', b'}', b'\0',
             ];
 
             for &c in &chars {

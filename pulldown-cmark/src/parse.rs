@@ -491,7 +491,8 @@ impl<'input> ParserInner<'input> {
                                 let converted_string =
                                     String::from_utf8(span).expect("invalid utf8");
                                 ItemBody::OwnedInlineHtml(
-                                    self.allocs.allocate_cow(converted_string.into()),
+                                    self.allocs
+                                        .allocate_cow(CowStr::from_replace_nuls(converted_string)),
                                 )
                             } else {
                                 ItemBody::InlineHtml
@@ -999,6 +1000,12 @@ impl<'input> ParserInner<'input> {
                             backslash_escaped: false,
                         },
                     });
+                    if wikitext.contains('\0') {
+                        self.tree[body_node].item.body = ItemBody::SynthesizeText(
+                            self.allocs
+                                .allocate_cow(CowStr::from_replace_nuls(wikitext)),
+                        );
+                    }
                     Some((false, body_node, wikitext))
                 }
             };
@@ -1006,7 +1013,7 @@ impl<'input> ParserInner<'input> {
             if let Some((has_pothole, body_node, wikiname)) = wikilink {
                 let link_ix = self.allocs.allocate_link(
                     LinkType::WikiLink { has_pothole },
-                    wikiname.into(),
+                    CowStr::from_replace_nuls(wikiname),
                     "".into(),
                     "".into(),
                 );
@@ -1285,10 +1292,10 @@ impl<'input> ParserInner<'input> {
 
             if c == close {
                 let cow = if mark == 1 {
-                    (i - start_ix + 1, text[mark..i].into())
+                    (i - start_ix + 1, CowStr::from_replace_nuls(&text[mark..i]))
                 } else {
                     title.push_str(&text[mark..i]);
-                    (i - start_ix + 1, title.into())
+                    (i - start_ix + 1, CowStr::from_replace_nuls(title))
                 };
 
                 return Some(cow);
@@ -1405,9 +1412,9 @@ impl<'input> ParserInner<'input> {
 
         let cow = if let Some(mut buf) = buf {
             buf.push_str(&spanned_text[start_ix..]);
-            buf.into()
+            CowStr::from_replace_nuls(buf)
         } else {
-            spanned_text.into()
+            CowStr::from_replace_nuls(spanned_text)
         };
 
         self.tree[open].item.body = ItemBody::Math(self.allocs.allocate_cow(cow), is_display);
@@ -1470,14 +1477,14 @@ impl<'input> ParserInner<'input> {
                     buf.remove(0);
                     buf.pop();
                 }
-                buf.into()
+                CowStr::from_replace_nuls(buf)
             } else {
-                spanned_text[1..(spanned_text.len() - 1).max(1)].into()
+                CowStr::from_replace_nuls(&spanned_text[1..(spanned_text.len() - 1).max(1)])
             }
         } else if let Some(buf) = buf {
-            buf.into()
+            CowStr::from_replace_nuls(buf)
         } else {
-            spanned_text.into()
+            CowStr::from_replace_nuls(spanned_text)
         };
 
         if preceding_backslash {
@@ -2080,7 +2087,7 @@ where
 {
     /// Performs a lookup on reference label using unicode case folding.
     pub fn get(&'s self, key: &'b str) -> Option<&'b LinkDef<'input>> {
-        self.0.get(&UniCase::new(key.into()))
+        self.0.get(&UniCase::new(CowStr::from_replace_nuls(key)))
     }
 
     /// Provides an iterator over all the document's reference definitions.
@@ -2095,7 +2102,8 @@ where
 {
     /// Performs a lookup on reference label using unicode case folding.
     pub fn contains(&'s self, key: &'b str) -> bool {
-        self.0.contains_key(&UniCase::new(key.into()))
+        self.0
+            .contains_key(&UniCase::new(CowStr::from_replace_nuls(key)))
     }
     /// Performs a lookup on reference label using unicode case folding.
     pub fn get_mut(&'s mut self, key: CowStr<'input>) -> Option<&'s mut FootnoteDef> {
@@ -2388,11 +2396,17 @@ fn item_to_event<'a>(item: Item, text: &'a str, allocs: &mut Allocations<'a>) ->
     let tag = match item.body {
         ItemBody::Text { .. } => return Event::Text(text[item.start..item.end].into()),
         ItemBody::Code(cow_ix) => return Event::Code(allocs.take_cow(cow_ix)),
-        ItemBody::SynthesizeText(cow_ix) => return Event::Text(allocs.take_cow(cow_ix)),
+        ItemBody::SynthesizeText(cow_ix) => {
+            return Event::Text(allocs.take_cow(cow_ix));
+        }
         ItemBody::SynthesizeChar(c) => return Event::Text(c.into()),
         ItemBody::HtmlBlock => Tag::HtmlBlock,
-        ItemBody::Html => return Event::Html(text[item.start..item.end].into()),
-        ItemBody::InlineHtml => return Event::InlineHtml(text[item.start..item.end].into()),
+        ItemBody::Html => {
+            return Event::Html(CowStr::from_replace_nuls(&text[item.start..item.end]));
+        }
+        ItemBody::InlineHtml => {
+            return Event::InlineHtml(CowStr::from_replace_nuls(&text[item.start..item.end]));
+        }
         ItemBody::OwnedInlineHtml(cow_ix) => return Event::InlineHtml(allocs.take_cow(cow_ix)),
         ItemBody::SoftBreak => return Event::SoftBreak,
         ItemBody::HardBreak(_) => return Event::HardBreak,
