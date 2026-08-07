@@ -250,7 +250,7 @@ impl<'a> BrokenLink<'a> {
     /// The `reference` member is cloned to a Boxed or Inline version.
     pub fn into_static(self) -> BrokenLink<'static> {
         BrokenLink {
-            span: self.span.clone(),
+            span: self.span,
             link_type: self.link_type,
             reference: self.reference.into_string().into(),
         }
