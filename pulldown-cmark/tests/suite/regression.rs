@@ -3672,3 +3672,126 @@ fn regression_test_230() {
 
     test_markdown_html(original, expected, false, false, false, false, true, false, false, false, false);
 }
+
+#[test]
+fn regression_test_231() {
+    let original = r##"- [ ] a
+  -
+"##;
+    let expected = r##"<ul>
+<li>
+<h2>[ ] a</h2>
+</li>
+</ul>
+"##;
+
+    test_markdown_html(original, expected, false, false, false, false, false, false, false, false, false);
+}
+
+#[test]
+fn regression_test_232() {
+    let original = r##"- [ ] x
+
+  y
+  -
+"##;
+    let expected = r##"<ul>
+<li>
+<p><input disabled="" type="checkbox"/>
+x</p>
+<h2>y</h2>
+</li>
+</ul>
+"##;
+
+    test_markdown_html(original, expected, false, false, false, false, false, false, false, false, false);
+}
+
+#[test]
+fn regression_test_233() {
+    let original = r##"- [x] a {#id}
+  -
+"##;
+    let expected = r##"<ul>
+<li>
+<h2 id="id">[x] a</h2>
+</li>
+</ul>
+"##;
+
+    test_markdown_html(original, expected, false, false, false, false, false, false, false, false, false);
+}
+
+#[test]
+fn regression_test_234() {
+    let original = r##"- [ ] \*a\*
+  -
+"##;
+    let expected = r##"<ul>
+<li>
+<h2>[ ] *a*</h2>
+</li>
+</ul>
+"##;
+
+    test_markdown_html(original, expected, false, false, false, false, false, false, false, false, false);
+}
+
+#[test]
+fn regression_test_235() {
+    let original = r##"- [x] a
+  -
+
+[x]: https://example.com
+"##;
+    let expected = r##"<ul>
+<li>
+<h2><a href="https://example.com">x</a> a</h2>
+</li>
+</ul>
+"##;
+
+    test_markdown_html(original, expected, false, false, false, false, false, false, false, false, false);
+}
+
+#[test]
+fn regression_test_236() {
+    let original = r##"- [x] | one | two | three
+  |-----|-----|-------
+  | one | two | three
+"##;
+    let expected = r##"<ul>
+<li><input disabled="" type="checkbox" checked=""/>
+| one | two | three
+|-----|-----|-------
+| one | two | three</li></ul>
+"##;
+
+    test_markdown_html(original, expected, false, false, false, false, false, false, false, false, false);
+}
+
+#[test]
+fn regression_test_237() {
+    let original = r##"- [x] a
+  : b
+- c
+  : d
+"##;
+    let expected = r##"<ul>
+<li>
+<dl>
+<dt>[x] a</dt>
+<dd>b</dd>
+</dl>
+</li>
+<li>
+<dl>
+<dt>c</dt>
+<dd>d</dd>
+</dl>
+</li>
+</ul>
+"##;
+
+    test_markdown_html(original, expected, false, false, false, false, false, true, false, false, false);
+}
