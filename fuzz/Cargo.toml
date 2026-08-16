@@ -36,3 +36,9 @@ name = "commonmark_js"
 path = "fuzz_targets/commonmark_js.rs"
 test = false
 doc = false
+
+[[bin]]
+name = "html"
+path = "fuzz_targets/html.rs"
+test = false
+doc = false

@@ -1,9 +1,10 @@
-//! Fuzzin helper functions.
+//! Fuzzing helper functions.
 
 use std::convert::TryInto;
 use std::ptr;
 
 use anyhow::anyhow;
+use libfuzzer_sys::arbitrary::{self, Arbitrary};
 use mozjs::conversions::ToJSValConvertible;
 use mozjs::jsapi::{
     EnterRealm, HandleValueArray, JS_NewGlobalObject, LeaveRealm, OnNewGlobalHookOption,
@@ -13,7 +14,7 @@ use mozjs::rooted;
 use mozjs::rust::wrappers::JS_CallFunctionName;
 use mozjs::rust::SIMPLE_GLOBAL_CLASS;
 use mozjs::rust::{JSEngine, RealmOptions, Runtime};
-use pulldown_cmark::{CodeBlockKind, Event, LinkType, Parser, Tag, TagEnd};
+use pulldown_cmark::{CodeBlockKind, Event, LinkType, Options, Parser, Tag, TagEnd};
 use quick_xml::escape::unescape;
 use quick_xml::events::Event as XmlEvent;
 use quick_xml::reader::Reader;
@@ -21,6 +22,20 @@ use quick_xml::reader::Reader;
 fn urldecode(data: &str) -> String {
     let decoded = urlencoding::decode_binary(data.as_bytes());
     urlencoding::encode_binary(&decoded[..]).to_string()
+}
+
+/// Wrapper for `pulldown_cmark::Options` implementing `Arbitrary`.
+///
+/// This could be done as a derive on `Options` directly, but bitflags doesn't appear to support
+/// cfg_attr derives (which we would want to avoid a hard dependency on arbitrary).
+#[derive(Debug)]
+pub struct ArbitraryOptions(pub Options);
+
+impl<'a> Arbitrary<'a> for ArbitraryOptions {
+    fn arbitrary(u: &mut arbitrary::Unstructured<'a>) -> arbitrary::Result<Self> {
+        let raw = u32::arbitrary(u)?;
+        Ok(ArbitraryOptions(Options::from_bits_truncate(raw)))
+    }
 }
 
 /// Send Markdown `text` to `pulldown-cmark` and return Markdown

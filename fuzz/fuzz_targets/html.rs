@@ -11,5 +11,11 @@ struct FuzzingInput<'a> {
 }
 
 fuzz_target!(|data: FuzzingInput<'_>| {
-    for _ in pulldown_cmark::Parser::new_ext(data.markdown, data.options.0) {}
+    let parser = pulldown_cmark::Parser::new_ext(data.markdown, data.options.0);
+    let mut output = String::new();
+
+    pulldown_cmark::html::push_html(&mut output, parser);
+
+    assert!(!output.contains('\0'));
+    // assert!(!output.contains('\r'));
 });
