@@ -539,6 +539,31 @@ pub(crate) fn scan_nextline(bytes: &[u8]) -> usize {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum LineEnding {
+    LF,
+    CR,
+    CRLF,
+}
+
+impl LineEnding {
+    pub fn at_end(bytes: &[u8]) -> Option<LineEnding> {
+        match bytes {
+            &[.., b'\r', b'\n'] => Some(LineEnding::CRLF),
+            &[.., b'\n'] => Some(LineEnding::LF),
+            &[.., b'\r'] => Some(LineEnding::CR),
+            _ => None,
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        match self {
+            LineEnding::LF | LineEnding::CR => 1,
+            LineEnding::CRLF => 2,
+        }
+    }
+}
+
 // return: end byte for closing code fence, or None
 // if the line is not a closing code fence
 pub(crate) fn scan_closing_code_fence(
@@ -1610,6 +1635,25 @@ mod test {
         ];
         for email in EMAILS {
             assert!(scan_email(email, 1).is_none());
+        }
+    }
+
+    #[test]
+    fn line_ending_at_end() {
+        const PAIRS: &[(&[u8], Option<LineEnding>)] = &[
+            (b"", None),
+            (b"\n", Some(LineEnding::LF)),
+            (b"\r", Some(LineEnding::CR)),
+            (b"\r\n", Some(LineEnding::CRLF)),
+            (b"x", None),
+            (b"x\n", Some(LineEnding::LF)),
+            (b"x\r", Some(LineEnding::CR)),
+            (b"x\r\n", Some(LineEnding::CRLF)),
+            (b"x\r\n\r", Some(LineEnding::CR)),
+            (b"x\r\n\r ", None),
+        ];
+        for &(bytes, result) in PAIRS {
+            assert_eq!(LineEnding::at_end(bytes), result);
         }
     }
 }

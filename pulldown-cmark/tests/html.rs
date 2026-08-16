@@ -27,7 +27,8 @@ console.log("teeeest");
 function another_func() {
 console.log("fooooo");
 }
-</script>"##;
+</script>
+"##;
 
     let mut s = String::new();
     html::push_html(&mut s, Parser::new(original));
@@ -60,7 +61,8 @@ console.log("teeeest");
 function another_func() {
 console.log("fooooo");
 }
-</script>"##;
+</script>
+"##;
 
     let mut s = String::new();
     html::push_html(&mut s, Parser::new(original));
@@ -79,7 +81,8 @@ fn html_test_3() {
 <?
 <div></div>
 <p>Useless</p>
-?>"##;
+?>
+"##;
 
     let mut s = String::new();
     html::push_html(&mut s, Parser::new(original));
@@ -98,7 +101,8 @@ fn html_test_4() {
 <!--
 <div></div>
 <p>Useless</p>
--->"##;
+-->
+"##;
 
     let mut s = String::new();
     html::push_html(&mut s, Parser::new(original));
@@ -117,7 +121,8 @@ fn html_test_5() {
 <![CDATA[
 <div></div>
 <p>Useless</p>
-]]>"##;
+]]>
+"##;
 
     let mut s = String::new();
     html::push_html(&mut s, Parser::new(original));
@@ -134,7 +139,8 @@ Some things are here...
     let expected = r##"<p>Little header</p>
 <!X
 Some things are here...
->"##;
+>
+"##;
 
     let mut s = String::new();
     html::push_html(&mut s, Parser::new(original));
@@ -166,7 +172,8 @@ console.log("teeeest");
 function another_func() {
 console.log("fooooo");
 }
-</script>"##;
+</script>
+"##;
 
     let mut s = String::new();
     html::push_html(&mut s, Parser::new(original));
@@ -361,7 +368,7 @@ fn issue_819() {
 #[test]
 fn issue_1056() {
     let original = "```\rcode\rblock\r\n```\n";
-    let expected = "<pre><code>code\rblock\n</code></pre>\n";
+    let expected = "<pre><code>code\nblock\n</code></pre>\n";
 
     let mut s = String::new();
     html::push_html(&mut s, Parser::new(original));
