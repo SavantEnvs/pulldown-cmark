@@ -156,8 +156,8 @@ impl<'a, 'b> FirstPass<'a, 'b> {
                             return task_list_marker.end + n;
                         } else {
                             line_start.scan_all_space();
-                            let ix = start_ix + line_start.bytes_scanned();
-                            return self.parse_paragraph(ix, Some(task_list_marker));
+                            return self
+                                .parse_paragraph(after_marker_index, Some(task_list_marker));
                         }
                     }
                 }
@@ -1673,6 +1673,53 @@ impl<'a, 'b> FirstPass<'a, 'b> {
         {
             surgerize_tight_list(&mut self.tree, cur_ix);
             self.begin_list_item = None;
+        }
+        if let Some(child_ix) = self.tree[cur_ix].child {
+            if let Some(grandchild_ix) = self.tree[child_ix].child {
+                // Task list markers are only allowed in paragraphs or list items.
+                //
+                // The hardest part of enforcing this is definitionlisttitle, because
+                // those are converted *from* paragraphs afte they've already been popped.
+                //
+                // To work around this, we don't do the task list tree surgery until we're
+                // pop()ping the task list marker's grandparent. We know that task list
+                // markers will always have a grandparent, because they are only generated
+                // in unordered lists: List is the grandparent, Item is the parent,
+                // and TaskListMarker is a child of the Item.
+                let child_is_paragraph_or_item = matches!(
+                    self.tree[child_ix].item.body,
+                    ItemBody::Paragraph | ItemBody::TightParagraph | ItemBody::ListItem(..)
+                );
+                let grandchild_is_task_list_marker = matches!(
+                    self.tree[grandchild_ix].item.body,
+                    ItemBody::TaskListMarker(..)
+                );
+                if child_is_paragraph_or_item && grandchild_is_task_list_marker {
+                    // exclude the task list marker from the paragraph text
+                    let end = self.tree[grandchild_ix].item.end;
+                    self.tree[child_ix].item.start = end;
+                    let mut next_ix = self.tree[grandchild_ix].next;
+                    while let Some(ix) = next_ix {
+                        if self.tree[ix].item.end > end {
+                            if self.tree[ix].item.start <= end {
+                                self.tree[ix].item.start =
+                                    if self.text.as_bytes()[end].is_ascii_whitespace() {
+                                        end + 1
+                                    } else {
+                                        end
+                                    };
+                            }
+                            break;
+                        } else {
+                            next_ix = self.tree[ix].next;
+                            self.tree[grandchild_ix].next = next_ix;
+                        }
+                    }
+                } else if grandchild_is_task_list_marker {
+                    // do not parse `[ ]` as a task list marker in this context
+                    self.tree[child_ix].child = self.tree[grandchild_ix].next;
+                }
+            }
         }
     }
 

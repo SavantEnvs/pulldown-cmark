@@ -3082,3 +3082,121 @@ First <span title=" ">Second</span>
 <p><a href="Z%EF%BF%BD">Z�</a>
 <a href="Z%EF%BF%BD">Z�</a></p>
 ````````````````````````````````
+
+https://github.com/pulldown-cmark/pulldown-cmark/issues/1115
+
+A task list marker is only valid when the list item content is a
+paragraph. When the paragraph becomes a setext heading, the task-list
+interpretation is canceled and the marker bytes are kept as literal
+text instead of being emitted inside the heading.
+
+```````````````````````````````` example
+- [ ] a
+  -
+.
+<ul>
+<li>
+<h2>[ ] a</h2>
+</li>
+</ul>
+````````````````````````````````
+
+A task list marker on an earlier paragraph is kept when a *later*
+block in the same item becomes a setext heading (#1115).
+
+```````````````````````````````` example
+- [ ] x
+
+  y
+  -
+.
+<ul>
+<li>
+<p><input disabled="" type="checkbox"/>
+x</p>
+<h2>y</h2>
+</li>
+</ul>
+````````````````````````````````
+
+Heading attributes still apply when the marker is kept as text (#1115).
+
+```````````````````````````````` example
+- [x] a {#id}
+  -
+.
+<ul>
+<li>
+<h2 id="id">[x] a</h2>
+</li>
+</ul>
+````````````````````````````````
+
+Only the separating whitespace is kept with the marker text, so a
+backslash escape right after it still resolves normally (#1115).
+
+```````````````````````````````` example
+- [ ] \*a\*
+  -
+.
+<ul>
+<li>
+<h2>[ ] *a*</h2>
+</li>
+</ul>
+````````````````````````````````
+
+When the task-list interpretation is canceled, the marker's bytes are
+re-exposed to inline parsing, so a matching reference definition still
+resolves `[x]` as a link, matching GitHub's postprocessing order (#1124).
+
+```````````````````````````````` example
+- [x] a
+  -
+
+[x]: https://example.com
+.
+<ul>
+<li>
+<h2><a href="https://example.com">x</a> a</h2>
+</li>
+</ul>
+````````````````````````````````
+
+Task list canceling in tables.
+
+```````````````````````````````` example
+- [x] | one | two | three
+  |-----|-----|-------
+  | one | two | three
+.
+<ul>
+<li><input disabled="" type="checkbox" checked=""/>
+| one | two | three
+|-----|-----|-------
+| one | two | three</li></ul>
+````````````````````````````````
+
+Definition lists don't cancel task lists (they act like paragraphs):
+
+```````````````````````````````` example_deflists
+- [x] a
+  : b
+- c
+  : d
+.
+<ul>
+<li>
+<dl>
+<dt>[x] a</dt>
+<dd>b</dd>
+</dl>
+</li>
+<li>
+<dl>
+<dt>c</dt>
+<dd>d</dd>
+</dl>
+</li>
+</ul>
+````````````````````````````````
