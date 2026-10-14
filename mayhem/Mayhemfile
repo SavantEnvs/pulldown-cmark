@@ -1,0 +1,7 @@
+# seed-from: https://app.mayhem.security/savantenvs/pulldown-cmark/parse
+project: savantenvs/pulldown-cmark
+target: parse-mined-e9ce6de
+
+cmds:
+  - cmd: /mayhem/parse
+    libfuzzer: true
